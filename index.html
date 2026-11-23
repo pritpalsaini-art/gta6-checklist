@@ -56,7 +56,7 @@ li.open .arr{transform:rotate(90deg)}
 .badbox{margin:0 0 8px;padding:8px 10px;border-radius:8px;background:light-dark(#e6eefb,#18263d);font-size:14px}
 .good li.bad .tg b{opacity:.45}.good li.bad .ck{opacity:.3;pointer-events:none}.good li.bad .w::after{content:" · not counted"}
 body:not(.good) .badbox{display:none}body:not(.good) .t-skip{display:none}
-.views{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;background:var(--line);padding:4px;border-radius:12px}
+.views{display:grid;grid-template-columns:1fr 1fr 52px;gap:6px;margin-top:10px;background:var(--line);padding:4px;border-radius:12px}
 .views button{min-height:42px;border:0;border-radius:9px;background:transparent;color:var(--ink);font:600 15px "Work Sans",sans-serif;cursor:pointer}
 .views button[aria-pressed=true]{background:var(--sea);color:#fff}
 #mapv{max-width:760px;margin:0 auto;padding:12px max(5vw,16px) 40px}
@@ -129,6 +129,7 @@ li.done .tg b{text-decoration:line-through;opacity:.55}
 .hide{display:none!important}
 .bk{margin-top:14px;background:var(--card);border:2px solid var(--sea);border-radius:14px;padding:12px 14px}.bk h3{font:400 22px/1.15 Anton,Impact,sans-serif;margin:0 0 4px;color:var(--sea)}.bk textarea{width:100%;font:13px/1.4 ui-monospace,monospace;padding:8px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink);word-break:break-all}.bk .tools{margin-top:8px}
 .tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}
+.tmenu{max-height:65vh;overflow:auto;padding-bottom:4px}.tools.tm{margin-top:10px}.views #vMenu{font-size:18px}.views #vMenu[aria-expanded=true]{background:var(--sea)}
 .btn{font:600 15px "Work Sans",sans-serif;min-height:44px;padding:0 16px;border-radius:10px;border:2px solid var(--sea);background:transparent;color:var(--sea);cursor:pointer}
 .btn.on{background:var(--sea);color:#fff}
 button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
@@ -153,7 +154,9 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 <div class="hud">
 <div class="hrow"><div class="rank" id="rank">Fresh out of the Keys<small id="lbl">0 of 0 done</small></div><span class="big" id="pct">0%</span></div>
 <div class="track"><div class="fill" id="fill"></div></div>
-<div class="views" role="group" aria-label="View"><button id="vList" aria-pressed="true">☰ Checklist</button><button id="vMap" aria-pressed="false">🗺 Map</button></div>
+<div class="views" role="group" aria-label="View"><button id="vList" aria-pressed="true">☰ Checklist</button><button id="vMap" aria-pressed="false">🗺 Map</button><button id="vMenu" aria-expanded="false" aria-controls="tmenu" aria-label="Backup, restore and more">⚙️</button></div><div class="tmenu" id="tmenu" hidden><div class="tools tm"><button class="btn" id="expand">Open all</button><button class="btn" id="bkBtn">💾 Backup progress</button><button class="btn" id="rsBtn">♻️ Restore</button><button class="btn" id="reset">Clear all ticks</button></div>
+<div class="bk" id="bkPanel" hidden><h3 id="bkT"></h3><p id="bkP" class="where"></p><textarea id="bkCode" rows="4" spellcheck="false"></textarea><div class="tools"><button class="btn on" id="bkGo"></button><button class="btn" id="bkShare" hidden>Share…</button><button class="btn" id="bkClose">Close</button></div><p class="note" id="bkMsg" role="status"></p></div>
+<p class="note" id="confirm" hidden>Tap "Clear all ticks" again to confirm.</p></div>
 <div class="search"><input id="q" type="search" placeholder="Search missions, loot, your pins…" aria-label="Search" autocomplete="off"><button id="qx" aria-label="Clear search" hidden>✕</button></div>
 <div class="chips" id="chips">
 <button class="chip" data-f="all" aria-pressed="true">All</button>
@@ -171,9 +174,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 <main id="listv">
 <div class="next" id="next"><b id="nextT">Next up</b><span id="nextW"></span><br><button class="btn" id="nextGo">Show me how</button></div>
 <div id="list"></div><p id="noRes" hidden>No matches. Try another word, or tap ✕ to clear the search.</p>
-<div class="tools"><button class="btn" id="expand">Open all</button><button class="btn" id="bkBtn">💾 Backup progress</button><button class="btn" id="rsBtn">♻️ Restore</button><button class="btn" id="reset">Clear all ticks</button></div>
-<div class="bk" id="bkPanel" hidden><h3 id="bkT"></h3><p id="bkP" class="where"></p><textarea id="bkCode" rows="4" spellcheck="false"></textarea><div class="tools"><button class="btn on" id="bkGo"></button><button class="btn" id="bkShare" hidden>Share…</button><button class="btn" id="bkClose">Close</button></div><p class="note" id="bkMsg" role="status"></p></div>
-<p class="note" id="confirm" hidden>Tap "Clear all ticks" again to confirm.</p>
+
 <p class="note">Built from IGN's Chapter 1 guide plus PowerPyx, GTABase, Push Square, ScreenHype, GTABoom, thegta6map and other launch-week guides. Guides sometimes disagree; where they do, the safer timing is used.</p>
 </main>
 <section id="mapv" hidden>
@@ -357,7 +358,7 @@ document.getElementById("noRes").hidden=!!list.querySelector("li.it:not(.hide)")
 list.querySelectorAll("section").forEach(s=>s.classList.toggle("hide",!s.querySelector("li.it:not(.hide)")))};
 document.getElementById("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;F=b.dataset.f;document.querySelectorAll(".chip[data-f]").forEach(x=>x.setAttribute("aria-pressed",x===b));applyF()});
 document.getElementById("nextGo").addEventListener("click",e=>{const li=document.getElementById("li-"+e.currentTarget.dataset.id);if(!li)return;if(li.classList.contains("hide")){F="all";document.querySelectorAll(".chip[data-f]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.f==="all"));applyF()}openItem(li,true);li.scrollIntoView({behavior:"smooth",block:"center"})});
-let allOpen=false;const ex=document.getElementById("expand");ex.addEventListener("click",()=>{allOpen=!allOpen;list.querySelectorAll("li.it").forEach(li=>openItem(li,allOpen));ex.textContent=allOpen?"Close all":"Open all";ex.classList.toggle("on",allOpen)});
+let allOpen=false;const ex=document.getElementById("expand");ex.addEventListener("click",()=>{if(listv.hidden)setView(false);allOpen=!allOpen;list.querySelectorAll("li.it").forEach(li=>openItem(li,allOpen));ex.textContent=allOpen?"Close all":"Open all";ex.classList.toggle("on",allOpen)});
 let armed=false;const rb=document.getElementById("reset"),cf=document.getElementById("confirm");
 rb.addEventListener("click",()=>{if(!armed){armed=true;cf.hidden=false;setTimeout(()=>{armed=false;cf.hidden=true},4000);return}st={};save();boxes.forEach(c=>c.checked=false);lastRank=null;upd();applyF();armed=false;cf.hidden=true;toast("Fresh start.")});
 const pg=document.getElementById("pgood"),pa=document.getElementById("pall"),psd=document.getElementById("psd");
@@ -433,6 +434,7 @@ document.getElementById("zout").addEventListener("click",()=>{const[W,H]=size();
 document.getElementById("mtS").addEventListener("click",()=>fit("s"));document.getElementById("mtK").addEventListener("click",()=>fit("k"));document.getElementById("mtL").addEventListener("click",()=>fit("l"));document.getElementById("mtH").addEventListener("click",()=>fit("h"));
 addEventListener("resize",()=>{if(!mapv.hidden)apply()});
 sheet.addEventListener("change",e=>{const lc=e.target.closest("[data-loot]");if(lc){if(lc.checked)LF[lc.dataset.loot]=1;else delete LF[lc.dataset.loot];saveLoot();drawLootUI();drawMap();if(lc.checked)toast("Nice find!");return}const c=e.target.closest("[data-for]");if(!c)return;const m=document.getElementById(c.dataset.for);m.checked=c.checked;m.dispatchEvent(new Event("change"));drawMap();drawSheet()});
+const tmenu=document.getElementById("tmenu"),vMenu=document.getElementById("vMenu");vMenu.addEventListener("click",()=>{tmenu.hidden=!tmenu.hidden;vMenu.setAttribute("aria-expanded",!tmenu.hidden)});
 const listv=document.getElementById("listv"),mapv=document.getElementById("mapv"),vL=document.getElementById("vList"),vM=document.getElementById("vMap");
 document.getElementById("realHint").textContent=APP?"Opens State of Leonida's map with all your checklist pins on top. Press Back to return.":"Opens State of Leonida's map. In the Android app, your checklist pins show on top of it.";
 const mpanel=document.getElementById("mpanel"),zfs=document.getElementById("zfs");
