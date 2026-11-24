@@ -43,7 +43,7 @@ main{max-width:760px;margin:0 auto;padding:8px max(5vw,16px) 40px}
 section{margin-top:26px}
 h2{font:400 24px/1.1 Anton,Impact,sans-serif;margin:0 0 4px;color:var(--sea);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .cnt{font:600 13px "Work Sans",sans-serif;color:var(--mute)}
-#colv{margin-top:26px}#colv>h2{margin-bottom:4px}
+#colv{margin-top:26px}.creg{display:flex;gap:8px;overflow-x:auto;margin:0 0 12px;padding-bottom:4px;scrollbar-width:none}.creg .chip{flex:none}.creg .chip:disabled{opacity:.5}#colv>h2{margin-bottom:4px}
 .colg{margin:0 0 10px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .cgh{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:8px 14px;border:0;background:none;color:var(--ink);font:600 17px "Work Sans",sans-serif;text-align:left;cursor:pointer}
 .cgh .ic{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:17px;background:#8a3fc0}
@@ -531,23 +531,24 @@ const COLI=COLG.map(g=>LOOT.map((l,i)=>[l,i]).filter(([l])=>g[2](l[5])).map(([,i
 const near=(x,y)=>{let b=null,d=1e12;LAB.forEach(a=>{if(/Ocean|Gulf/.test(a[0]))return;const dd=(a[1]-x)**2+(a[2]-y)**2;if(dd<d){d=dd;b=a[0]}});return b};
 const colv=document.getElementById("colv");const COPEN=new Set();
 const colName=l=>l[5].startsWith("Card:")?l[5].slice(6)+" card":l[4];
-const drawCol=()=>{let tot=0,fnd=0;const gs=COLG.map((g,gi)=>{const ids=COLI[gi];const f=ids.filter(i=>LF[LOOT[i][1]]).length;tot+=ids.length;fnd+=f;
+const REG=[["k","Ch 1: Leonida Keys",1],["g","Ch 2: Port Gellhorn",2],["v","Ch 3–4: Vice City",3],["r","Rest of Leonida",0],["a","Everywhere",0]];const regOf=(x,y)=>y<-2600?"k":(x<-4300&&y<5500)?"g":(x>-3800&&y<3300)?"v":"r";let CR=null;const regOk=r=>{const d=REG.find(q=>q[0]===r);return!d[2]||d[2]<=U};const inReg=i=>CR==="a"||regOf(LOOT[i][2],LOOT[i][3])===CR;
+const drawCol=()=>{if(!CR||!regOk(CR))CR=U>=3?"v":U>=2?"g":"k";let tot=0,fnd=0;const gs=COLG.map((g,gi)=>{const ids=COLI[gi].filter(inReg);const f=ids.filter(i=>LF[LOOT[i][1]]).length;tot+=ids.length;fnd+=f;
 const rows=ids.map(i=>{const l=LOOT[i],d=!!LF[l[1]];return`<li class="${d?"done":""}" data-ci="${i}"><input type="checkbox" class="ck cck" ${d?"checked":""} aria-label="Found: ${esc(colName(l))}"><span>${esc(colName(l))}<small>near ${esc(near(l[2],l[3])||"Leonida")}</small></span><button class="btn cmap" aria-label="Show on map">📍 Map</button></li>`}).join("");
 return`<section class="colg${COPEN.has(gi)?" open":""}" data-gi="${gi}"><button class="cgh" aria-expanded="${COPEN.has(gi)}"><span class="ic">${g[1]}</span>${esc(g[0])}<span class="cnt">${f}/${ids.length}</span><span class="ar">▶</span></button><div class="cbar"><i style="width:${ids.length?f/ids.length*100:0}%"></i></div>${COPEN.has(gi)?`<p class="sub">${esc(g[3])} Tick it here or on the map.</p><ul>${rows}</ul>`:""}</section>`}).join("");
-colv.innerHTML=`<h2>Collectibles<span class="cnt">${fnd}/${tot} found</span></h2><p class="sub">Every collectible on GTABase's map of Leonida. Tap a group to see each one, and 📍 to find it on the map.</p>${gs}`;filterCol()};
+colv.innerHTML=`<h2>Collectibles<span class="cnt">${fnd}/${tot} found</span></h2><p class="sub">Pick the area your chapter takes place in. Tap a group to see each one, and 📍 to find it on the map.</p><div class="creg">${REG.map(([k,n,c])=>regOk(k)?`<button class="chip" data-reg="${k}" aria-pressed="${CR===k}">${n}</button>`:`<button class="chip" disabled aria-pressed="false">🔒 Ch ${c} area</button>`).join("")}</div>${gs}`;filterCol()};
 const filterCol=()=>{const showSec=F==="all"||F==="col"||F==="left";colv.classList.toggle("hide",!showSec);if(!showSec)return;
-colv.querySelectorAll(".colg").forEach(g=>{const gi=+g.dataset.gi;const ids=COLI[gi];const m=ids.filter(i=>{const l=LOOT[i];if(F==="left"&&LF[l[1]])return false;return qm((colName(l)+" "+COLG[gi][0]+" "+(near(l[2],l[3])||"")).toLowerCase())});g.classList.toggle("hide",!m.length);
+colv.querySelectorAll(".colg").forEach(g=>{const gi=+g.dataset.gi;const ids=COLI[gi].filter(inReg);const m=ids.filter(i=>{const l=LOOT[i];if(F==="left"&&LF[l[1]])return false;return qm((colName(l)+" "+COLG[gi][0]+" "+(near(l[2],l[3])||"")).toLowerCase())});g.classList.toggle("hide",!m.length);
 if(Q&&m.length&&!COPEN.has(gi)){COPEN.add(gi);drawCol();return}g.querySelectorAll("li").forEach(li=>li.classList.toggle("hide",!m.includes(+li.dataset.ci)))});
 if(F==="col"){list.querySelectorAll("section").forEach(s=>s.classList.add("hide"))}
 document.getElementById("noRes").hidden=!!list.querySelector("li.it:not(.hide)")||!!colv.querySelector(".colg:not(.hide)")};
-colv.addEventListener("click",e=>{const h=e.target.closest(".cgh");if(h){const gi=+h.closest(".colg").dataset.gi;COPEN.has(gi)?COPEN.delete(gi):COPEN.add(gi);drawCol();return}
+colv.addEventListener("click",e=>{const rb=e.target.closest("[data-reg]");if(rb){CR=rb.dataset.reg;drawCol();return}const h=e.target.closest(".cgh");if(h){const gi=+h.closest(".colg").dataset.gi;COPEN.has(gi)?COPEN.delete(gi):COPEN.add(gi);drawCol();return}
 const li=e.target.closest("li[data-ci]");if(!li)return;const i=+li.dataset.ci,l=LOOT[i];
 if(e.target.closest(".cmap")){LON[l[0]]=true;saveLoot();drawLootUI();setView(true);const[W,H]=size();VB.w=1400;VB.x=l[2]-VB.w/2;VB.y=-l[3]-VB.w*H/W/2;["S","K","L","H"].forEach(q=>document.getElementById("mt"+q).setAttribute("aria-pressed",false));pickPin("loot:"+i,false,null);return}
 if(e.target.classList.contains("cck")){if(e.target.checked)LF[l[1]]=1;else delete LF[l[1]];saveLoot();drawLootUI();drawCol();if(e.target.checked)toast("Found it!")}});
 window.__filterCol=filterCol;window.__drawCol=drawCol;drawCol();
 
 let unlArm=null;list.addEventListener("click",e=>{const b=e.target.closest(".unl");if(!b)return;const c=+b.dataset.ch;if(unlArm!==c){unlArm=c;b.textContent="Tap again to show it";setTimeout(()=>{if(unlArm===c){unlArm=null;b.textContent=c===6?"I've finished the story":"I've reached "+chName(c)}},4000);return}
-unlArm=null;U=Math.max(U,c);DB.set(K+"unl",String(U));list.querySelectorAll("section[data-ch]").forEach(x=>x.classList.toggle("locked",+x.dataset.ch>U));upd();applyF();toast(chName(c)+" unlocked.")});
+unlArm=null;U=Math.max(U,c);DB.set(K+"unl",String(U));list.querySelectorAll("section[data-ch]").forEach(x=>x.classList.toggle("locked",+x.dataset.ch>U));upd();applyF();if(window.__drawCol)window.__drawCol();toast(chName(c)+" unlocked.")});
 upd();applyF();
 }
 </script>
