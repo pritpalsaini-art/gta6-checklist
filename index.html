@@ -36,6 +36,21 @@ main{max-width:760px;margin:0 auto;padding:8px max(5vw,16px) 40px}
 section{margin-top:26px}
 h2{font:400 24px/1.1 Anton,Impact,sans-serif;margin:0 0 4px;color:var(--sea);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .cnt{font:600 13px "Work Sans",sans-serif;color:var(--mute)}
+#colv{margin-top:26px}#colv>h2{margin-bottom:4px}
+.colg{margin:0 0 10px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.cgh{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:8px 14px;border:0;background:none;color:var(--ink);font:600 17px "Work Sans",sans-serif;text-align:left;cursor:pointer}
+.cgh .ic{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:17px;background:#8a3fc0}
+.cgh .cnt{margin-left:auto;font-size:14px}.cgh .ar{transition:transform .2s;color:var(--mute)}
+.colg.open .cgh .ar{transform:rotate(90deg)}
+.cbar{height:6px;background:var(--line);margin:0 14px 10px;border-radius:3px;overflow:hidden}.cbar i{display:block;height:100%;background:#8a3fc0}
+.colg .sub{padding:0 14px}
+.colg ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.colg li{display:flex;align-items:center;gap:10px;padding:6px 12px;border-top:1px solid var(--line)}
+.colg li:first-child{border-top:0}
+.colg li .ck{margin:0}.colg li span{flex:1;min-width:0}.colg li small{display:block;color:var(--mute)}
+.colg li.done span{text-decoration:line-through;opacity:.6}
+.colg li .btn{margin:0;min-height:40px;padding:0 12px}
+.colg.hide,.colg li.hide,#colv.hide{display:none}
 .sub{color:var(--mute);margin:0 0 10px;font-size:15px}
 .warn{background:var(--coral);color:#fff;font:600 13px "Work Sans",sans-serif;padding:2px 8px;border-radius:6px}
 ul.list{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
@@ -168,12 +183,13 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 <button class="chip" data-f="pal" aria-pressed="false">Friends</button>
 <button class="chip" data-f="hold" aria-pressed="false">Don't rush</button>
 <button class="chip" data-f="story" aria-pressed="false">Story</button>
+<button class="chip" data-f="col" aria-pressed="false">Collectibles</button>
 <button class="chip" data-f="left" aria-pressed="false">Not done</button>
 </div>
 </div>
 <main id="listv">
 <div class="next" id="next"><b id="nextT">Next up</b><span id="nextW"></span><br><button class="btn" id="nextGo">Show me how</button></div>
-<div id="list"></div><p id="noRes" hidden>No matches. Try another word, or tap ✕ to clear the search.</p>
+<div id="list"></div><div id="colv"></div><p id="noRes" hidden>No matches. Try another word, or tap ✕ to clear the search.</p>
 
 <p class="note">Built from IGN's Chapter 1 guide plus PowerPyx, GTABase, Push Square, ScreenHype, GTABoom, thegta6map and other launch-week guides. Guides sometimes disagree; where they do, the safer timing is used.</p>
 </main>
@@ -355,7 +371,7 @@ let Q="";const TXT={};S.forEach((sec,a)=>sec.i.forEach(it=>{const id=`c${a}-`+it
 const qm=t=>!Q||Q.split(/\s+/).every(w=>t.includes(w));
 const applyF=()=>{list.querySelectorAll("li.it").forEach(li=>{const g=li.dataset.g.split(" ");const id=li.id.slice(3);const show=(F==="all"||(F==="left"?!li.classList.contains("done"):g.includes(F)))&&qm(TXT[id]+" "+(NOTES[id]||"").toLowerCase());li.classList.toggle("hide",!show)});
 document.getElementById("noRes").hidden=!!list.querySelector("li.it:not(.hide)");
-list.querySelectorAll("section").forEach(s=>s.classList.toggle("hide",!s.querySelector("li.it:not(.hide)")))};
+list.querySelectorAll("section").forEach(s=>s.classList.toggle("hide",!s.querySelector("li.it:not(.hide)")));if(window.__filterCol)window.__filterCol()};
 document.getElementById("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;F=b.dataset.f;document.querySelectorAll(".chip[data-f]").forEach(x=>x.setAttribute("aria-pressed",x===b));applyF()});
 document.getElementById("nextGo").addEventListener("click",e=>{const li=document.getElementById("li-"+e.currentTarget.dataset.id);if(!li)return;if(li.classList.contains("hide")){F="all";document.querySelectorAll(".chip[data-f]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.f==="all"));applyF()}openItem(li,true);li.scrollIntoView({behavior:"smooth",block:"center"})});
 let allOpen=false;const ex=document.getElementById("expand");ex.addEventListener("click",()=>{if(listv.hidden)setView(false);allOpen=!allOpen;list.querySelectorAll("li.it").forEach(li=>openItem(li,allOpen));ex.textContent=allOpen?"Close all":"Open all";ex.classList.toggle("on",allOpen)});
@@ -371,11 +387,11 @@ pg.addEventListener("click",()=>pick(true));pa.addEventListener("click",()=>pick
 const byLoc={};Object.keys(IDX).forEach(id=>{const l=IL[IDX[id].t];if(l)(byLoc[l]=byLoc[l]||[]).push(id)});
 let SEL=null,FOCUS=null,PEND=null;
 const LTN=["Weapons","Vehicles","Cash & loot","Collectibles"],LTC=["#8e2a1c","#1f5fbf","#d99a00","#8a3fc0"];
-let LON=pj(DB.get(K+"lon"),null)||[true,true,true,false];while(LON.length<6)LON.push(true);let HF=DB.get(K+"hf")==="1";const LIC=["🔫","🚗","💰","🧩"];
+let LON=pj(DB.get(K+"lon"),null)||[true,true,true,false];while(LON.length<6)LON.push(true);if(!DB.get(K+"colon")){LON[3]=true;DB.set(K+"lon",JSON.stringify(LON));DB.set(K+"colon","1")}let HF=DB.get(K+"hf")==="1";const LIC=["🔫","🚗","💰","🧩"];
 let LF=pj(DB.get(K+"loot"),{});
 const saveLoot=()=>{DB.set(K+"loot",JSON.stringify(LF));DB.set(K+"lon",JSON.stringify(LON))};
 const lootChips=document.getElementById("lootChips");
-const drawLootUI=()=>{lootChips.innerHTML=LTN.map((n,i)=>{const all=LOOT.filter(l=>l[0]===i),f=all.filter(l=>LF[l[1]]).length;return`<button class="lchip" data-t="${i}" aria-pressed="${LON[i]}"><i style="background:${LTC[i]}"></i>${n} ${f}/${all.length}</button>`}).join("");const f=LOOT.filter(l=>LF[l[1]]).length;document.getElementById("lootCount").textContent=`${f} of ${LOOT.length} found`;if(typeof drawPanel==="function")drawPanel()};
+const drawLootUI=()=>{lootChips.innerHTML=LTN.map((n,i)=>{const all=LOOT.filter(l=>l[0]===i),f=all.filter(l=>LF[l[1]]).length;return`<button class="lchip" data-t="${i}" aria-pressed="${LON[i]}"><i style="background:${LTC[i]}"></i>${n} ${f}/${all.length}</button>`}).join("");const f=LOOT.filter(l=>LF[l[1]]).length;document.getElementById("lootCount").textContent=`${f} of ${LOOT.length} found`;if(typeof drawPanel==="function")drawPanel();if(window.__drawCol)window.__drawCol()};
 lootChips.addEventListener("click",e=>{const b=e.target.closest(".lchip");if(!b)return;const i=+b.dataset.t;LON[i]=!LON[i];saveLoot();drawLootUI();drawMap()});const svg=document.getElementById("msvg"),sheet=document.getElementById("sheet"),gp=document.getElementById("mpins"),gl=document.getElementById("mlabels");
 document.getElementById("land1").setAttribute("d",LAND1);document.getElementById("land2").setAttribute("d",LAND2);
 const VIEWS={s:[-9700,-8000,2400,9600],k:[-7600,-7200,-900,-2700],l:[-3450,-6900,-1750,-5100],h:[-4800,-5300,-2100,-3200]};
@@ -493,6 +509,32 @@ sheet.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b)r
 list.addEventListener("click",e=>{const b=e.target.closest(".mapbtn");if(!b)return;e.stopPropagation();setView(true);pickPin(b.dataset.loc,true,b.dataset.id);document.documentElement.style.setProperty("--hud",(document.querySelector(".hud").offsetHeight+8)+"px");document.getElementById("mapbox").scrollIntoView({block:"start"})});
 document.getElementById("chips").addEventListener("click",()=>{if(!mapv.hidden){drawMap();drawSheet()}});
 pg.addEventListener("click",()=>{if(!mapv.hidden){drawMap();drawSheet()}});pa.addEventListener("click",()=>{if(!mapv.hidden){drawMap();drawSheet()}});
+/* Collectibles checklist (shares found ticks with the map) */
+const COLG=[["Trading cards","🃏",b=>b.startsWith("Card:")||b==="Collectible card","Cards from lots of different sets. Walk up to one and pick it up."],
+["Magazines","📰",b=>b==="Magazine","Walk up to a magazine and pick it up."],
+["Comics & books","📚",b=>b==="Comic"||b==="Book swap","A comic and a book swap spot."],
+["Hidden packages","📦",b=>b==="Hidden package","Packages tucked away around the map."],
+["Meteorites","☄️",b=>b==="Meteorite","Rocks that fell from the sky. Look for a small crater."],
+["Messages in a bottle","🍾",b=>b==="Message in a bottle","Bottles washed up along the shore."],
+["Treasure","💎",b=>b==="Treasure","Shipwreck treasure. Some of it is underwater."]];
+const COLI=COLG.map(g=>LOOT.map((l,i)=>[l,i]).filter(([l])=>g[2](l[5])).map(([,i])=>i));
+const near=(x,y)=>{let b=null,d=1e12;LAB.forEach(a=>{if(/Ocean|Gulf/.test(a[0]))return;const dd=(a[1]-x)**2+(a[2]-y)**2;if(dd<d){d=dd;b=a[0]}});return b};
+const colv=document.getElementById("colv");const COPEN=new Set();
+const colName=l=>l[5].startsWith("Card:")?l[5].slice(6)+" card":l[4];
+const drawCol=()=>{let tot=0,fnd=0;const gs=COLG.map((g,gi)=>{const ids=COLI[gi];const f=ids.filter(i=>LF[LOOT[i][1]]).length;tot+=ids.length;fnd+=f;
+const rows=ids.map(i=>{const l=LOOT[i],d=!!LF[l[1]];return`<li class="${d?"done":""}" data-ci="${i}"><input type="checkbox" class="ck cck" ${d?"checked":""} aria-label="Found: ${esc(colName(l))}"><span>${esc(colName(l))}<small>near ${esc(near(l[2],l[3])||"Leonida")}</small></span><button class="btn cmap" aria-label="Show on map">📍 Map</button></li>`}).join("");
+return`<section class="colg${COPEN.has(gi)?" open":""}" data-gi="${gi}"><button class="cgh" aria-expanded="${COPEN.has(gi)}"><span class="ic">${g[1]}</span>${esc(g[0])}<span class="cnt">${f}/${ids.length}</span><span class="ar">▶</span></button><div class="cbar"><i style="width:${ids.length?f/ids.length*100:0}%"></i></div>${COPEN.has(gi)?`<p class="sub">${esc(g[3])} Tick it here or on the map.</p><ul>${rows}</ul>`:""}</section>`}).join("");
+colv.innerHTML=`<h2>Collectibles<span class="cnt">${fnd}/${tot} found</span></h2><p class="sub">Every collectible we know of in this part of the map. Tap a group to see each one, and 📍 to find it on the map.</p>${gs}`;filterCol()};
+const filterCol=()=>{const showSec=F==="all"||F==="col"||F==="left";colv.classList.toggle("hide",!showSec);if(!showSec)return;
+colv.querySelectorAll(".colg").forEach(g=>{const gi=+g.dataset.gi;const ids=COLI[gi];const m=ids.filter(i=>{const l=LOOT[i];if(F==="left"&&LF[l[1]])return false;return qm((colName(l)+" "+COLG[gi][0]+" "+(near(l[2],l[3])||"")).toLowerCase())});g.classList.toggle("hide",!m.length);
+if(Q&&m.length&&!COPEN.has(gi)){COPEN.add(gi);drawCol();return}g.querySelectorAll("li").forEach(li=>li.classList.toggle("hide",!m.includes(+li.dataset.ci)))});
+if(F==="col"){list.querySelectorAll("section").forEach(s=>s.classList.add("hide"))}
+document.getElementById("noRes").hidden=!!list.querySelector("li.it:not(.hide)")||!!colv.querySelector(".colg:not(.hide)")};
+colv.addEventListener("click",e=>{const h=e.target.closest(".cgh");if(h){const gi=+h.closest(".colg").dataset.gi;COPEN.has(gi)?COPEN.delete(gi):COPEN.add(gi);drawCol();return}
+const li=e.target.closest("li[data-ci]");if(!li)return;const i=+li.dataset.ci,l=LOOT[i];
+if(e.target.closest(".cmap")){LON[l[0]]=true;saveLoot();drawLootUI();setView(true);const[W,H]=size();VB.w=1400;VB.x=l[2]-VB.w/2;VB.y=-l[3]-VB.w*H/W/2;["S","K","L","H"].forEach(q=>document.getElementById("mt"+q).setAttribute("aria-pressed",false));pickPin("loot:"+i,false,null);return}
+if(e.target.classList.contains("cck")){if(e.target.checked)LF[l[1]]=1;else delete LF[l[1]];saveLoot();drawLootUI();drawCol();if(e.target.checked)toast("Found it!")}});
+window.__filterCol=filterCol;window.__drawCol=drawCol;drawCol();
 upd();applyF();
 }
 </script>
