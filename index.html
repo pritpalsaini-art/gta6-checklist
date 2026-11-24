@@ -155,12 +155,48 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.2}}
 @media(prefers-reduced-motion:reduce){.fill,.arr,.toast{transition:none}.cf{display:none}}
 @media(max-width:600px){.how{padding-left:14px}}
+
+/* ---- cleaner look ---- */
+.hero{padding:18px max(5vw,16px) 14px}
+.hero h1{font-size:clamp(28px,7.5vw,40px);margin:0 0 4px;line-height:1.05}
+.hero p{font-size:15px;opacity:.9}
+.ps{margin-top:10px;padding:10px 12px}
+.ps.set .seg,.ps.set .psd,.ps.set .psn,.ps.set .psl{display:none}
+.psmini{display:none;align-items:center;gap:10px;font-weight:600;font-size:15px}
+.ps.set .psmini{display:flex}
+.psmini button{margin-left:auto;border:0;background:rgba(42,15,8,.14);border-radius:8px;min-height:36px;padding:0 14px;font:600 14px "Work Sans",sans-serif;color:#2a0f08;cursor:pointer}
+.hud{padding:8px max(5vw,16px)}
+.hrow{align-items:center}
+.rank{font-size:15px}
+.rank small{display:inline;margin-left:8px;font-size:13px}
+.big{font-size:22px}
+.track{height:6px;margin-top:6px}
+.views{margin-top:8px}
+.views button{min-height:38px}
+.chips{margin-top:8px;padding-bottom:2px}
+.chip{min-height:34px;padding:0 12px;font-size:13px}
+.chip.extra{display:none}
+.chips.more .chip.extra{display:inline-block}
+#chipMore{border-style:dashed}
+.next{margin-top:12px;border-width:1px;padding:10px 14px}
+.next b{font-size:17px}
+.next .btn{min-height:36px}
+#q{min-height:40px}
+section{margin-top:14px}
+#list>section>h2{font-size:20px;cursor:pointer;user-select:none;padding:6px 0}
+#list>section:not(.locked)>h2::after{content:"▾";margin-left:auto;font:600 16px "Work Sans",sans-serif;color:var(--mute);transition:transform .2s}
+#list>section.cl:not(.locked)>h2::after{transform:rotate(-90deg)}
+#list>section.cl ul.list,#list>section.cl .sub{display:none}
+#list.filtering>section.cl:not(.locked) ul.list{display:block}
+.tag{display:none}
+.tag.t-miss,.tag.t-hold{display:inline-block}
+li.it .row{padding:12px 14px}
 </style></head><body>
 <header class="hero">
 <h1>Chapter 1: do everything</h1>
-<p>Every job, missable, Easter egg and relationship booster left after Coming Home, set up for a good-guy Jason. Tap an item to see how. Story missions marked "Don't rush" close things off, so read their warning first.</p>
+<p>Everything left in Chapter 1, set up your way. Tap an item to see how.</p>
 <div class="ps" role="group" aria-labelledby="psl">
-<p class="psl" id="psl">How are you playing?</p>
+<div class="psmini"><span id="psCur"></span><button id="psChg">Change</button></div><p class="psl" id="psl">How are you playing?</p>
 <div class="seg"><button id="pgood" aria-pressed="true">😇 Good guy</button><button id="pall" aria-pressed="false">Do everything</button></div>
 <p class="psd" id="psd"></p>
 <p class="psn">This only changes this list. It doesn't change anything in your game.</p>
@@ -176,16 +212,16 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 <div class="chips" id="chips">
 <button class="chip" data-f="all" aria-pressed="true">All</button>
 <button class="chip" data-f="miss" aria-pressed="false">Missable</button>
-<button class="chip" data-f="egg" aria-pressed="false">Easter eggs</button>
-<button class="chip" data-f="cash" aria-pressed="false">Money</button>
-<button class="chip" data-f="good" aria-pressed="false">Good guy</button>
-<button class="chip" data-f="love" aria-pressed="false">Lucia ♥</button>
-<button class="chip" data-f="pal" aria-pressed="false">Friends</button>
-<button class="chip" data-f="hold" aria-pressed="false">Don't rush</button>
-<button class="chip" data-f="story" aria-pressed="false">Story</button>
+<button class="chip extra" data-f="egg" aria-pressed="false">Easter eggs</button>
+<button class="chip extra" data-f="cash" aria-pressed="false">Money</button>
+<button class="chip extra" data-f="good" aria-pressed="false">Good guy</button>
+<button class="chip extra" data-f="love" aria-pressed="false">Lucia ♥</button>
+<button class="chip extra" data-f="pal" aria-pressed="false">Friends</button>
+<button class="chip extra" data-f="hold" aria-pressed="false">Don't rush</button>
+<button class="chip extra" data-f="story" aria-pressed="false">Story</button>
 <button class="chip" data-f="col" aria-pressed="false">Collectibles</button>
 <button class="chip" data-f="left" aria-pressed="false">Not done</button>
-</div>
+<button class="chip" id="chipMore" aria-expanded="false">More ▾</button></div>
 </div>
 <main id="listv">
 <div class="next" id="next"><b id="nextT">Next up</b><span id="nextW"></span><br><button class="btn" id="nextGo">Show me how</button></div>
@@ -276,7 +312,7 @@ S.forEach((sec,a)=>{const bs=L.filter(c=>c.id.startsWith(`c${a}-`));document.get
 const nx=L.find(c=>!c.checked);const nt=document.getElementById("nextT"),nw=document.getElementById("nextW"),ng=document.getElementById("nextGo");
 if(nx){const it=IDX[nx.id];nt.textContent="Next up: "+it.t;nw.textContent=it.w;ng.hidden=false;ng.dataset.id=nx.id}else{nt.textContent="Chapter 1 complete!";nw.textContent="Every job done. On to Chapter 2.";ng.hidden=true}
 const up=lastRank!==null&&r!==lastRank&&RANKS.findIndex(x=>x[1]===r)>RANKS.findIndex(x=>x[1]===lastRank);lastRank=r;return up};
-const openItem=(li,force)=>{const o=force??!li.classList.contains("open");li.classList.toggle("open",o);li.querySelector(".tg").setAttribute("aria-expanded",o)};
+const openItem=(li,force)=>{const _s=li.closest("section");if(_s)_s.classList.remove("cl");const o=force??!li.classList.contains("open");li.classList.toggle("open",o);li.querySelector(".tg").setAttribute("aria-expanded",o)};
 boxes.forEach(c=>{c.checked=!!st[c.id];c.addEventListener("change",()=>{st[c.id]=c.checked;save();const up=upd();applyF();
 if(!c.checked)return;const a=c.id.slice(1).split("-")[0];const bs=live().filter(x=>x.id.startsWith(`c${a}-`));
 if(up){confetti();toast("Rank up! "+lastRank)}else if(bs.every(x=>x.checked)){confetti();toast("Section cleared: "+S[a].h)}else{toast(["Nice one.","Ticked off.","Jason approves.","Lucia's impressed.","Smooth."][Math.floor(Math.random()*5)])}
@@ -285,12 +321,12 @@ list.addEventListener("click",e=>{const b=e.target.closest(".tg");if(b)openItem(
 let F="all";
 let Q="";const TXT={};S.forEach((sec,a)=>sec.i.forEach(it=>{const id=`c${a}-`+it.t.toLowerCase().replace(/[^a-z0-9]+/g,"-").slice(0,40);TXT[id]=(it.t+" "+it.w+" "+it.how.join(" ")+" "+(it.tip||"")+" "+sec.h).toLowerCase()}));
 const qm=t=>!Q||Q.split(/\s+/).every(w=>t.includes(w));
-const applyF=()=>{list.querySelectorAll("li.it").forEach(li=>{const g=li.dataset.g.split(" ");const id=li.id.slice(3);const show=(F==="all"||(F==="left"?!li.classList.contains("done"):g.includes(F)))&&qm(TXT[id]+" "+(NOTES[id]||"").toLowerCase());li.classList.toggle("hide",!show)});
+const applyF=()=>{list.classList.toggle("filtering",F!=="all"||!!Q);list.querySelectorAll("li.it").forEach(li=>{const g=li.dataset.g.split(" ");const id=li.id.slice(3);const show=(F==="all"||(F==="left"?!li.classList.contains("done"):g.includes(F)))&&qm(TXT[id]+" "+(NOTES[id]||"").toLowerCase());li.classList.toggle("hide",!show)});
 document.getElementById("noRes").hidden=!!list.querySelector("li.it:not(.hide)");
 list.querySelectorAll("section").forEach(s=>s.classList.toggle("hide",!s.querySelector("li.it:not(.hide)")));if(window.__filterCol)window.__filterCol()};
 document.getElementById("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;F=b.dataset.f;document.querySelectorAll(".chip[data-f]").forEach(x=>x.setAttribute("aria-pressed",x===b));applyF()});
 document.getElementById("nextGo").addEventListener("click",e=>{const li=document.getElementById("li-"+e.currentTarget.dataset.id);if(!li)return;if(li.classList.contains("hide")){F="all";document.querySelectorAll(".chip[data-f]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.f==="all"));applyF()}openItem(li,true);li.scrollIntoView({behavior:"smooth",block:"center"})});
-let allOpen=false;const ex=document.getElementById("expand");ex.addEventListener("click",()=>{if(listv.hidden)setView(false);allOpen=!allOpen;list.querySelectorAll("li.it").forEach(li=>openItem(li,allOpen));ex.textContent=allOpen?"Close all":"Open all";ex.classList.toggle("on",allOpen)});
+let allOpen=false;const ex=document.getElementById("expand");ex.addEventListener("click",()=>{document.querySelectorAll("#list>section.cl").forEach(x=>x.classList.remove("cl"));if(listv.hidden)setView(false);allOpen=!allOpen;list.querySelectorAll("li.it").forEach(li=>openItem(li,allOpen));ex.textContent=allOpen?"Close all":"Open all";ex.classList.toggle("on",allOpen)});
 let armed=false;const rb=document.getElementById("reset"),cf=document.getElementById("confirm");
 rb.addEventListener("click",()=>{if(!armed){armed=true;cf.hidden=false;setTimeout(()=>{armed=false;cf.hidden=true},4000);return}st={};save();boxes.forEach(c=>c.checked=false);lastRank=null;upd();applyF();armed=false;cf.hidden=true;toast("Fresh start.")});
 const pg=document.getElementById("pgood"),pa=document.getElementById("pall"),psd=document.getElementById("psd");
@@ -453,5 +489,20 @@ if(e.target.classList.contains("cck")){if(e.target.checked)LF[l[1]]=1;else delet
 window.__filterCol=filterCol;window.__drawCol=drawCol;drawCol();
 upd();applyF();
 }
+</script>
+<script>
+(()=>{const ps=document.querySelector(".ps");if(ps){const cur=document.getElementById("psCur");
+const sync=()=>{const b=ps.querySelector(".seg button[aria-pressed=true]");ps.classList.toggle("set",!!b&&!ps.dataset.open);if(b)cur.textContent="Playing as: "+b.textContent};
+document.getElementById("psChg").addEventListener("click",()=>{ps.dataset.open="1";ps.classList.remove("set")});
+ps.querySelector(".seg").addEventListener("click",()=>setTimeout(()=>{delete ps.dataset.open;sync()},0));sync()}
+const ch=document.getElementById("chips"),mo=document.getElementById("chipMore");
+const setMore=v=>{ch.classList.toggle("more",v);mo.setAttribute("aria-expanded",v);mo.textContent=v?"Less ▴":"More ▾"};
+mo.addEventListener("click",e=>{e.stopPropagation();setMore(!ch.classList.contains("more"))});
+if(ch.querySelector(".chip.extra[aria-pressed=true]"))setMore(true);
+const secs=[...document.querySelectorAll("#list>section")];const ng=document.getElementById("nextGo");
+const keep=ng&&ng.dataset.id?document.getElementById("li-"+ng.dataset.id):null;const ks=keep?keep.closest("section"):null;
+secs.forEach(x=>{if(x!==ks)x.classList.add("cl")});
+document.getElementById("list").addEventListener("click",e=>{const h=e.target.closest("#list>section>h2");if(!h||h.parentElement.classList.contains("locked"))return;h.parentElement.classList.toggle("cl")});
+})();
 </script>
 </body></html>
